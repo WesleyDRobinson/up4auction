@@ -1,0 +1,24 @@
+{
+  "name": "up4auction",
+  "version": "1.0.0",
+  "description": "a little game, of bidding, auctioning, bluffing, guessing",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack src/js/index.js public/bundle.js",
+    "build:watch": "webpack -w -d src/js/index.js public/bundle.js",
+    "deploy": "webpack -p src/js/index.js public/bundle.js && npm run s3sync",
+    "dev": "",
+    "s3sync": "s3cmd sync public/* s3://up4auction",
+    "test": "ava"
+  },
+  "author": "robinson.wesleyd@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.2",
+    "hyperhtml": "^1.12.5",
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "webpack": "^3.8.1"
+  }
+}
