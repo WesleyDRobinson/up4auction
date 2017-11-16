@@ -34,11 +34,11 @@ export default function makeGame () {
         const _createPlayers = () => {
             let p = game.players
 
-            p.set('player1', createPlayer(1, 'Player One'))
-            p.set('player2', createPlayer(2, 'Player Two'))
-            p.set('player3', createPlayer(3, 'Player Three'))
+            p.push(createPlayer(1, 'Player One'))
+            p.push(createPlayer(2, 'Player Two'))
+            p.push(createPlayer(3, 'Player Three'))
 
-            game.playerCount = p.size
+            game.playerCount = p.length
         }
 
         const _doleCoins = () => {
@@ -83,7 +83,7 @@ export default function makeGame () {
             phase: '',
             completed: false,
             playerCount: 0,
-            players: new Map()
+            players: []
         }
 
         _createPlayers()
@@ -127,7 +127,7 @@ export default function makeGame () {
 
         let card = getLowestCard(cards)
         g.round.cards = _.difference(cards, [card])
-        let p = g.players.get(player)
+        let p = g.players.filter(el => (el.id === player.id))
         p.propertyCards.push(card)
 
         p.coins -= cards.length === 1 || p.bid === 1 ? p.bid : Math.floor(p.bid / 2)
@@ -138,7 +138,7 @@ export default function makeGame () {
     const bid = (g, player, amount) => {
         if (typeof amount !== 'number') return 'could not process bid'
 
-        let p = g.players.get(player)
+        let p = g.players.filter(el => (el.id === player.id))
         let rB = g.round.bid
         if (amount > rB) {
             g.round.bid = amount
@@ -149,7 +149,7 @@ export default function makeGame () {
     }
 
     const selectAuctionCard = (g, player, cardId = p.propertyCards[0].id) => {
-        let p = g.players.get(player)
+        let p = g.players.filter(el => (el.id === player.id))
         return _.remove(p.propertyCards, card => card.id === cardId)
     }
 
