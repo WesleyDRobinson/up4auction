@@ -1,37 +1,33 @@
 import * as page from './page.js'
-import makeGame from './game.js'
+// import makeGame from './game.js'
 
 page('*', transition)
-page('/', landing)
-page('/game/start', startGame)
+page('/', '/game')
+page('/game', startGame)
 page('/game/:id', (ctx) => {
-    console.log('game/:id:', ctx)
+    console.log('page: game/:id:', ctx)
 })
-page('*', notfound)
 page()
+
+window.page = page
 
 function transition(ctx, next) {
     if (ctx.init) {
-        console.log('initializing', ctx)
-        next()
+        console.log('page: initializing', ctx)
     } else {
-        console.log('transitioning', ctx)
+        console.log('page: transitioning', ctx)
         next()
     }
 }
 
-function landing() {
-    console.log('landed')
-}
-
-function startGame() {
-    console.log('start game!')
-    window.addEventListener('game created', (e) => console.log(e.detail))
-    let game = makeGame()
-    let gameCreated = new CustomEvent('game created', {detail: game});
-    window.dispatchEvent(gameCreated)
+function startGame(ctx, next) {
+    console.log('page: start game')
+    next()
 }
 
 function notfound() {
     console.log('not found')
+    hyperHTML.bind(document.body)`
+    <a href="/game/start" class="db mw5 f3 pa3 mt5 center tc link near-black bg-blue grow">Start Over</a>
+`
 }

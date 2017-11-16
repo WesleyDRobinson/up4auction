@@ -58,12 +58,14 @@
     <script src="//unpkg.com/hyperhtml-element@latest/min.js"></script>
     <script>window.customElements || document.write('<script src="//cdnjs.cloudflare.com/ajax/libs/document-register-element/1.6.2/document-register-element.js"><' + '/script>')</script>
 
-    <!-- Components -->
-
 </head>
 <body class="avenir near-black bg-light-green">
 
-<a href="/game/start" class="db mw5 f3 pa3 mt5 center tc link near-black bg-blue grow">Start Game</a>
+<start-game></start-game>
+
+<!-- connect to DB - Firebase SDK + Firestore-->
+<script src="https://www.gstatic.com/firebasejs/4.6.2/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.6.0/firebase-firestore.js"></script>
 
 <!-- routing -->
 <script src="bundle.js"></script>
