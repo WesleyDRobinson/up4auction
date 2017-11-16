@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack src/js/index.js public/bundle.js",
     "build:watch": "webpack -w -d src/js/index.js public/bundle.js",
-    "deploy": "webpack -p src/js/index.js public/bundle.js && npm run s3sync",
+    "deploy": "npm run build && npm run s3sync",
     "dev": "node server.js",
     "s3sync": "s3cmd sync public/* s3://up4auction",
     "test": "ava"
