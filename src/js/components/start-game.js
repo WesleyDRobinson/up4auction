@@ -1,3 +1,7 @@
+import up4auction from '../game.js'
+
+const actions = up4auction().actions
+
 class StartGame extends HyperHTMLElement {
     created() {
         this.text = 'start game'
@@ -6,45 +10,47 @@ class StartGame extends HyperHTMLElement {
 
     render() {
         this.html`
-<p class="db mw6 f3 pa3 mt5 center tc ttc link near-black bg-blue grow"
-    onclick=${this}>${this.text}</>
-`
+            <p class="db mw6 f3 pa3 mt5 center tc ttc link near-black bg-blue pointer" onclick=${this}>
+                ${this.text}
+            </p>`
     }
 
     onclick() {
         if (this.clicked) return;
         this.clicked = 1
-        const {gameId, dbRef} = this._startGame()
+        StartGame._startGame()
+        this.text = 'enjoy the game!'
+        this.render()
         this._disappearAfter(1000)
     }
 
     _disappearAfter(timeout) {
         setTimeout(() => {
-            this.text = 'enjoy the game!'
-            this.render()
             this.firstElementChild.classList.add('animated', 'zoomOutUp')
+            setTimeout(() => {
+                this.remove()
+            }, 1000)
         }, timeout)
     }
 
-    _startGame() {
-        const config = {
-            apiKey: "AIzaSyDZscPiYk0GhygMxwCPfSCLkv8ZEgbmhHM",
-            authDomain: "retail-store.firebaseapp.com",
-            databaseURL: "https://retail-store.firebaseio.com",
-            projectId: "firebase-retail-store",
-            storageBucket: "firebase-retail-store.appspot.com",
-            messagingSenderId: "518140580977"
-        };
-        firebase.initializeApp(config);
-        const dbRef = firebase.firestore();
-        const game = dbRef.collection('games').doc()
-        const newGame = window.up4auction.stageGame(game.id)
-        game.set(newGame)
+    static _startGame() {
+        // stage game
+        const gameId = Math.random().toString(36).slice(2, 7)
+        const newGame = actions.stageGame(gameId)
 
-        return {
-            gameId: game.id,
-            dbRef
-        }
+        // add game to db
+        const db = firebase.firestore();
+        db.collection('games').add(newGame)
+
+        // give time for animations and nav to game
+        setTimeout(() => page(`/game/${newGame.id}`), 2000)
+
+        // updated to router.js Feb 28
+        // const gameEl = document.createElement('main-game')
+        // gameEl.gameId = newGame.id
+        // gameEl.game = JSON.stringify(newGame)
+        // gameEl.loaded = 1
+        // document.body.appendChild(gameEl)
     }
 }
 

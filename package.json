@@ -4,21 +4,27 @@
   "description": "a little game, of bidding, auctioning, bluffing, guessing",
   "main": "index.js",
   "scripts": {
-    "build": "webpack src/js/index.js public/bundle.js",
-    "build:watch": "webpack -w -d src/js/index.js public/bundle.js",
+    "build": "webpack src/js/index.js dist/bundle.js",
+    "build:watch": "webpack -w -d src/js/index.js dist/bundle.js",
     "deploy": "npm run build && npm run s3sync",
-    "dev": "node server.js",
-    "s3sync": "s3cmd sync public/* s3://up4auction",
+    "dev": "npm-run-all -p build:watch start",
+    "s3sync": "s3cmd sync dist/* s3://up4auction",
+    "start": "node server.js",
     "test": "ava"
   },
-  "author": "robinson.wesleyd@gmail.com",
+  "author": "wesley <robinson.wesleyd@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "compression": "^1.7.2",
     "express": "^4.16.2",
+    "helmet": "^3.11.0",
     "hyperhtml": "^1.12.5",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "morgan": "^1.9.0",
+    "winston": "^2.4.0"
   },
   "devDependencies": {
+    "npm-run-all": "^4.1.2",
     "webpack": "^3.8.1"
   }
 }
