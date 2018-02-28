@@ -17,7 +17,11 @@ app.use(compression()) // compression
 app.use(express.static(appDir));
 
 // send index.html for all routes
+<<<<<<< HEAD
 app.get('*', (req, res) => res.sendFile(path.join(appDir, 'index.html')))
+=======
+app.get('/', (req, res) => res.sendFile(path.join(appDir, 'index.html')))
+>>>>>>> 10e31dc48c4de22d14d6e3cfe8a3f03f2ecc0b83
 
 // start it!
 app.listen(PORT, () => log.info(`serving ${appDir} at http://localhost:${PORT}`))
