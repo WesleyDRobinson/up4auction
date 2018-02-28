@@ -18,7 +18,7 @@ class StartGame extends HyperHTMLElement {
     onclick() {
         if (this.clicked) return;
         this.clicked = 1
-        StartGame._startGame()
+        this._startGame()
         this.text = 'enjoy the game!'
         this.render()
         this._disappearAfter(1000)
@@ -33,7 +33,7 @@ class StartGame extends HyperHTMLElement {
         }, timeout)
     }
 
-    static _startGame() {
+    _startGame() {
         // stage game
         const gameId = Math.random().toString(36).slice(2, 7)
         const newGame = actions.stageGame(gameId)
