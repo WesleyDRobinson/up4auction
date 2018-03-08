@@ -44,13 +44,6 @@ class StartGame extends HyperHTMLElement {
 
         // give time for animations and nav to game
         setTimeout(() => page(`/game/${newGame.id}`), 2000)
-
-        // updated to router.js Feb 28
-        // const gameEl = document.createElement('main-game')
-        // gameEl.gameId = newGame.id
-        // gameEl.game = JSON.stringify(newGame)
-        // gameEl.loaded = 1
-        // document.body.appendChild(gameEl)
     }
 }
 
