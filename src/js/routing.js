@@ -1,4 +1,5 @@
 import * as page from './page.js'
+
 const {bind} = HyperHTMLElement
 const app = document.getElementById('app')
 // import makeGame from './game.js'
@@ -23,7 +24,5 @@ function mainGame(ctx, next) {
 
 function notfound() {
     console.log('not found')
-    hyperHTML.bind(document.body)`
-    <a href="/game/start" class="db mw5 f3 pa3 mt5 center tc link near-black bg-blue grow">Start Over</a>
-`
+    hyperHTML.bind(document.body)`<a href="/game/start" class="db mw5 f3 pa3 mt5 center tc link near-black bg-blue grow">Start Over</a>`
 }
