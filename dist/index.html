@@ -53,7 +53,7 @@
         instructions how to enable JavaScript in your web browser</a>.
     </noscript>
 
-    <!-- hyperHTML for web components -->
+    <!-- hyperHTML + HyperHTMLElement for web components + if (!customElements) polyfill -->
     <script src="//unpkg.com/hyperhtml@latest/min.js"></script>
     <script src="//unpkg.com/hyperhtml-element@latest/min.js"></script>
     <script>window.customElements || document.write('<script src="//cdnjs.cloudflare.com/ajax/libs/document-register-element/1.6.2/document-register-element.js"><' + '/script>')</script>
@@ -61,13 +61,28 @@
 </head>
 <body class="avenir near-black bg-light-green">
 
-<start-game></start-game>
+<div id="app"></div>
+<!--<start-game></start-game>-->
+<!--<main-game gameId="7gv4c"></main-game>-->
 
 <!-- connect to DB - Firebase SDK + Firestore-->
+<!-- exposes global: 'firebase' -->
 <script src="https://www.gstatic.com/firebasejs/4.6.2/firebase.js"></script>
 <script src="https://www.gstatic.com/firebasejs/4.6.0/firebase-firestore.js"></script>
+<script>
+    // connect to db
+    const fireStoreConfig = {
+        apiKey: "AIzaSyDZscPiYk0GhygMxwCPfSCLkv8ZEgbmhHM",
+        authDomain: "retail-store.firebaseapp.com",
+        databaseURL: "https://retail-store.firebaseio.com",
+        projectId: "firebase-retail-store",
+        storageBucket: "firebase-retail-store.appspot.com",
+        messagingSenderId: "518140580977"
+    };
+    firebase.initializeApp(fireStoreConfig);
+</script>
 
-<!-- routing -->
-<script src="bundle.js"></script>
+<!-- components + routing -->
+<script src="/bundle.js"></script>
 </body>
 </html>

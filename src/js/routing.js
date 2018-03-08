@@ -1,33 +1,28 @@
 import * as page from './page.js'
+
+const {bind} = HyperHTMLElement
+const app = document.getElementById('app')
 // import makeGame from './game.js'
 
-page('*', transition)
 page('/', '/game')
 page('/game', startGame)
-page('/game/:id', (ctx) => {
-    console.log('page: game/:id:', ctx)
-})
+page('/game/:id', mainGame)
 page()
 
 window.page = page
 
-function transition(ctx, next) {
-    if (ctx.init) {
-        console.log('page: initializing', ctx)
-    } else {
-        console.log('page: transitioning', ctx)
-        next()
-    }
+function startGame(ctx, next) {
+    bind(app)`<start-game></start-game>`
+    next()
 }
 
-function startGame(ctx, next) {
-    console.log('page: start game')
-    next()
+// for entering into a game directly
+function mainGame(ctx, next) {
+    let id = ctx.params.id
+    bind(app)`<main-game gameId=${id}></main-game>`
 }
 
 function notfound() {
     console.log('not found')
-    hyperHTML.bind(document.body)`
-    <a href="/game/start" class="db mw5 f3 pa3 mt5 center tc link near-black bg-blue grow">Start Over</a>
-`
+    hyperHTML.bind(document.body)`<a href="/game/start" class="db mw5 f3 pa3 mt5 center tc link near-black bg-blue grow">Start Over</a>`
 }
