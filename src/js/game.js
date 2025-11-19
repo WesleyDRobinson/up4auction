@@ -19,9 +19,10 @@ export default function makeGame () {
         return {
             id,
             name,
-            active: false,
+            active: true,
             coins: 0,
             bid: 0,
+            passed: false,
             propertyCards: [],
             moneyCards: [],
             netWorth: 0,
@@ -78,12 +79,14 @@ export default function makeGame () {
             round: {
                 number: 0,
                 type: '', // 'bidding' or 'auctioning'
-                cards: []
+                cards: [],
+                bid: 0
             },
             phase: '',
             completed: false,
             playerCount: 0,
-            players: []
+            players: [],
+            currentPlayerIndex: 0
         }
 
         _createPlayers()
@@ -106,10 +109,11 @@ export default function makeGame () {
         let r = g.round
         r.number += 1
         r.type = g.phase
+        r.bid = 0
+        r.cards = []
 
         while (n--) {
             if (g.phase === 'bidding'){
-                g.round.bid = 0
                 r.cards.push(g.propertyCards.pop())
             } else if (g.phase === 'auctioning') {
                 r.cards.push(g.moneyCards.pop())
@@ -117,7 +121,13 @@ export default function makeGame () {
                 throw new Error('cannot startRound(game) because no game.phase specified')
             }
         }
-        g.players.forEach(p => {p.active = true})
+        // Reset player states for new round
+        g.players.forEach(p => {
+            p.active = true
+            p.passed = false
+            p.bid = 0
+        })
+        g.currentPlayerIndex = 0
     }
 
     const pass = (g, player) => {
@@ -127,30 +137,102 @@ export default function makeGame () {
 
         let card = getLowestCard(cards)
         g.round.cards = _.difference(cards, [card])
-        let p = g.players.filter(el => (el.id === player.id))
-        p.propertyCards.push(card)
+        let p = g.players.find(el => el.id === player.id)
+        if (!p) return 'player not found'
 
-        p.coins -= cards.length === 1 || p.bid === 1 ? p.bid : Math.floor(p.bid / 2)
+        p.propertyCards.push(card)
+        // Player pays their current bid, or half if only one card left
+        const payAmount = cards.length === 1 ? p.bid : Math.floor(p.bid / 2)
+        p.coins -= payAmount
         p.bid = 0
+        p.passed = true
         p.active = false
+
+        // Advance to next active player
+        nextTurn(g)
     }
 
     const bid = (g, player, amount) => {
         if (typeof amount !== 'number') return 'could not process bid'
 
-        let p = g.players.filter(el => (el.id === player.id))
+        let p = g.players.find(el => el.id === player.id)
+        if (!p) return 'player not found'
+
         let rB = g.round.bid
-        if (amount > rB) {
+        if (amount > rB && amount <= p.coins) {
             g.round.bid = amount
             p.bid = amount
+            // Advance to next active player
+            nextTurn(g)
         } else {
-            console.error('bid must be larger than current bid')
+            console.error('bid must be larger than current bid and within coin limit')
+            return 'invalid bid'
         }
     }
 
     const selectAuctionCard = (g, player, cardId = p.propertyCards[0].id) => {
         let p = g.players.filter(el => (el.id === player.id))
         return _.remove(p.propertyCards, card => card.id === cardId)
+    }
+
+    const getCurrentPlayer = (g) => {
+        return g.players[g.currentPlayerIndex]
+    }
+
+    const getActivePlayers = (g) => {
+        return g.players.filter(p => p.active)
+    }
+
+    const nextTurn = (g) => {
+        const activePlayers = getActivePlayers(g)
+        if (activePlayers.length === 0) {
+            // Round is over
+            return false
+        }
+
+        // Find next active player
+        let nextIndex = (g.currentPlayerIndex + 1) % g.playerCount
+        let attempts = 0
+        while (!g.players[nextIndex].active && attempts < g.playerCount) {
+            nextIndex = (nextIndex + 1) % g.playerCount
+            attempts++
+        }
+
+        if (attempts >= g.playerCount) {
+            // No active players left
+            return false
+        }
+
+        g.currentPlayerIndex = nextIndex
+        return true
+    }
+
+    const isRoundComplete = (g) => {
+        // Round is complete when only one or zero players are active
+        const activePlayers = getActivePlayers(g)
+        return activePlayers.length <= 1
+    }
+
+    const completeRound = (g) => {
+        // If one player remains, they get the highest card and pay their bid
+        const activePlayers = getActivePlayers(g)
+        if (activePlayers.length === 1 && g.round.cards.length > 0) {
+            const winner = activePlayers[0]
+            const highestCard = g.round.cards.reduce((high, card) =>
+                card.value > high.value ? card : high, g.round.cards[0])
+
+            if (g.phase === 'bidding') {
+                winner.propertyCards.push(highestCard)
+                winner.coins -= winner.bid
+            } else {
+                winner.moneyCards.push(highestCard)
+                // In auction phase, winner pays coins equal to bid
+            }
+
+            g.round.cards = []
+            winner.bid = 0
+            winner.active = false
+        }
     }
 
     const score = (g) => {
@@ -179,6 +261,11 @@ export default function makeGame () {
             pass,
             bid,
             selectAuctionCard,
+            getCurrentPlayer,
+            getActivePlayers,
+            nextTurn,
+            isRoundComplete,
+            completeRound,
             score
         }
     }
