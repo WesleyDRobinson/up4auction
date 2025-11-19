@@ -44,8 +44,8 @@ class CurrentRound extends HyperHTMLElement {
           <div class="f6 fw6 mb3 gray tc">
             ${phase === 'bidding' ? 'Properties Available' : 'Money Cards Available'}
           </div>
-          <div class="flex justify-center flex-wrap">
-            ${cards.map(card => {
+          <div class="flex justify-center flex-wrap animate__animated animate__fadeInUp">
+            ${cards.map((card, index) => {
               const cardEl = document.createElement('game-card');
               cardEl.state = {
                 card,
@@ -54,6 +54,8 @@ class CurrentRound extends HyperHTMLElement {
                 clickable: false,
                 selected: false
               };
+              cardEl.style.animationDelay = `${index * 0.1}s`;
+              cardEl.classList.add('animate__animated', 'animate__bounceIn');
               return cardEl;
             })}
           </div>

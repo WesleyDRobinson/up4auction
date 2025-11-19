@@ -1,4 +1,5 @@
 import './game-board';
+import './player-setup';
 
 class MainGame extends HyperHTMLElement {
     static get observedAttributes() {
@@ -8,7 +9,9 @@ class MainGame extends HyperHTMLElement {
     get defaultState() {
         return {
             gameId: this.gameId,
-            loadedFromFirestore: false
+            loadedFromFirestore: false,
+            gameStarted: false,
+            playerNames: null
         }
     }
 
@@ -23,10 +26,31 @@ class MainGame extends HyperHTMLElement {
         this.render()
     }
 
+    handleStartGame(e) {
+        const { playerNames } = e.detail;
+        this.setState({
+            gameStarted: true,
+            playerNames
+        });
+        this.render();
+    }
+
     render() {
+        const { gameStarted, playerNames } = this.state;
+
+        if (!gameStarted) {
+            const setupEl = document.createElement('player-setup');
+            setupEl.addEventListener('start-game', this.handleStartGame.bind(this));
+            return this.html`
+                <div class="main-game">
+                    ${setupEl}
+                </div>
+            `;
+        }
+
         return this.html`
             <div class="main-game pa3">
-                <game-board></game-board>
+                <game-board playerNames=${JSON.stringify(playerNames)}></game-board>
             </div>
         `;
     }

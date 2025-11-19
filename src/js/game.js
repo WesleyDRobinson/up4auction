@@ -30,14 +30,14 @@ export default function makeGame () {
         }
     }
 
-    const stageGame = (id) => {
+    const stageGame = (id, playerNames = ['Player One', 'Player Two', 'Player Three']) => {
 
         const _createPlayers = () => {
             let p = game.players
 
-            p.push(createPlayer(1, 'Player One'))
-            p.push(createPlayer(2, 'Player Two'))
-            p.push(createPlayer(3, 'Player Three'))
+            playerNames.forEach((name, index) => {
+                p.push(createPlayer(index + 1, name))
+            })
 
             game.playerCount = p.length
         }

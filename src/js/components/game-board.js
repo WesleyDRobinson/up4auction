@@ -1,17 +1,17 @@
 import makeGame from '../game';
+import { saveGameState, subscribeToGame } from '../firebase-helper';
+import { executeAITurn, isAIPlayer, getAIDifficulty } from '../ai-player';
 import './current-round';
 import './player-hand';
 import './bidding-interface';
 
 class GameBoard extends HyperHTMLElement {
-  created() {
-    this.gameFactory = makeGame();
-    this.game = this.gameFactory.game;
-    this.actions = this.gameFactory.actions;
-    this.currentPlayerId = 1; // For demo, player 1 is the human player
+  static get observedAttributes() {
+    return ['playerNames'];
+  }
 
-    // Initialize the game
-    this.initializeGame();
+  created() {
+    this.setupGame();
     this.render();
   }
 
@@ -20,8 +20,29 @@ class GameBoard extends HyperHTMLElement {
       game: null,
       currentPlayerId: 1,
       message: null,
-      winner: null
+      winner: null,
+      playerNames: null
     };
+  }
+
+  setupGame() {
+    // Parse player names from attribute if available
+    let playerNames = ['Player One', 'Player Two', 'Player Three'];
+    if (this.playerNames) {
+      try {
+        playerNames = JSON.parse(this.playerNames);
+      } catch (e) {
+        console.error('Failed to parse player names', e);
+      }
+    }
+
+    // Create game with custom player names
+    this.gameFactory = makeGame();
+    this.actions = this.gameFactory.actions;
+    this.game = this.actions.stageGame(this.gameFactory.actions.getRandomNumber(), playerNames);
+
+    // Initialize the game
+    this.initializeGame();
   }
 
   initializeGame() {
@@ -29,6 +50,58 @@ class GameBoard extends HyperHTMLElement {
     this.actions.startBiddingPhase(this.game);
     this.actions.startRound(this.game);
     this.setState({ game: this.game });
+
+    // Save initial game state to Firestore
+    this.saveGame();
+
+    // Trigger AI turn if first player is AI
+    setTimeout(() => this.checkAndExecuteAITurn(), 1000);
+  }
+
+  checkAndExecuteAITurn() {
+    if (this.game.completed) return;
+
+    const currentPlayer = this.actions.getCurrentPlayer(this.game);
+    if (!currentPlayer) return;
+
+    if (isAIPlayer(currentPlayer)) {
+      // AI player's turn - execute after delay for realism
+      setTimeout(() => {
+        this.executeAIPlayerTurn(currentPlayer);
+      }, 1500); // 1.5 second delay
+    }
+  }
+
+  executeAIPlayerTurn(player) {
+    const difficulty = getAIDifficulty(player);
+    const decision = executeAITurn(this.game, player, difficulty);
+
+    if (decision.action === 'bid') {
+      this.setState({ message: `${player.name} bids ${decision.amount}` });
+      this.actions.bid(this.game, player, decision.amount);
+    } else {
+      this.setState({ message: `${player.name} passes` });
+      this.actions.pass(this.game, player);
+    }
+
+    this.checkRoundComplete();
+    this.saveGame();
+    this.render();
+
+    // Check for next AI turn
+    setTimeout(() => this.checkAndExecuteAITurn(), 500);
+  }
+
+  saveGame() {
+    saveGameState(this.game)
+      .then((gameId) => {
+        if (gameId) {
+          console.log('Game saved successfully');
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to save game:', error);
+      });
   }
 
   handleBid(e) {
@@ -47,9 +120,13 @@ class GameBoard extends HyperHTMLElement {
     } else {
       this.setState({ message: `Bid ${amount} placed!` });
       this.checkRoundComplete();
+      this.saveGame(); // Save after bid
     }
 
     this.render();
+
+    // Check if next player is AI
+    setTimeout(() => this.checkAndExecuteAITurn(), 500);
   }
 
   handlePass(e) {
@@ -63,7 +140,11 @@ class GameBoard extends HyperHTMLElement {
     this.actions.pass(this.game, currentPlayer);
     this.setState({ message: `${currentPlayer.name} passed` });
     this.checkRoundComplete();
+    this.saveGame(); // Save after pass
     this.render();
+
+    // Check if next player is AI
+    setTimeout(() => this.checkAndExecuteAITurn(), 500);
   }
 
   handlePropertySelected(e) {
@@ -103,16 +184,16 @@ class GameBoard extends HyperHTMLElement {
   }
 
   transitionToAuctioning() {
-    this.setState({ message: 'Bidding phase complete! Starting auction phase...' });
+    this.setState({ message: '🎉 Bidding phase complete! Starting auction phase...' });
     setTimeout(() => {
       this.actions.startAuctioningPhase(this.game);
       this.actions.startRound(this.game);
       this.setState({
-        message: 'Auction phase: Sell your properties for money!',
+        message: '💰 Auction phase: Sell your properties for money!',
         game: this.game
       });
       this.render();
-    }, 2000);
+    }, 2500);
   }
 
   endGame() {
