@@ -80,13 +80,15 @@ export default function makeGame () {
                 number: 0,
                 type: '', // 'bidding' or 'auctioning'
                 cards: [],
-                bid: 0
+                bid: 0,
+                auctionedProperties: [] // For auction phase: properties being sold
             },
             phase: '',
             completed: false,
             playerCount: 0,
             players: [],
-            currentPlayerIndex: 0
+            currentPlayerIndex: 0,
+            auctionPhaseComplete: false
         }
 
         _createPlayers()
@@ -170,9 +172,52 @@ export default function makeGame () {
         }
     }
 
-    const selectAuctionCard = (g, player, cardId = p.propertyCards[0].id) => {
-        let p = g.players.filter(el => (el.id === player.id))
-        return _.remove(p.propertyCards, card => card.id === cardId)
+    const selectPropertyToAuction = (g, player, cardId) => {
+        const p = g.players.find(el => el.id === player.id)
+        if (!p) return 'player not found'
+
+        // Find and remove the property card from player's hand
+        const cardIndex = p.propertyCards.findIndex(card => card.id === cardId)
+        if (cardIndex === -1) return 'card not found'
+
+        const selectedCard = p.propertyCards.splice(cardIndex, 1)[0]
+
+        // Add to round's auctioned properties with player info
+        g.round.auctionedProperties.push({
+            card: selectedCard,
+            playerId: player.id,
+            playerName: player.name
+        })
+
+        p.active = false // Mark player as done selecting
+
+        return null
+    }
+
+    const resolveAuctionRound = (g) => {
+        // Sort auctioned properties by value (descending)
+        const sortedProperties = g.round.auctionedProperties
+            .slice()
+            .sort((a, b) => b.card.value - a.card.value)
+
+        // Sort money cards by value (descending)
+        const sortedMoney = g.round.cards
+            .slice()
+            .sort((a, b) => b.value - a.value)
+
+        // Award money cards to players based on property rank
+        sortedProperties.forEach((prop, index) => {
+            const player = g.players.find(p => p.id === prop.playerId)
+            if (player && sortedMoney[index]) {
+                player.moneyCards.push(sortedMoney[index])
+            }
+        })
+
+        // Clear round data
+        g.round.cards = []
+        g.round.auctionedProperties = []
+
+        return true
     }
 
     const getCurrentPlayer = (g) => {
@@ -208,30 +253,37 @@ export default function makeGame () {
     }
 
     const isRoundComplete = (g) => {
-        // Round is complete when only one or zero players are active
-        const activePlayers = getActivePlayers(g)
-        return activePlayers.length <= 1
+        if (g.phase === 'bidding') {
+            // Bidding round is complete when only one or zero players are active
+            const activePlayers = getActivePlayers(g)
+            return activePlayers.length <= 1
+        } else if (g.phase === 'auctioning') {
+            // Auction round is complete when all players have selected a property
+            const activePlayers = getActivePlayers(g)
+            return activePlayers.length === 0
+        }
+        return false
     }
 
     const completeRound = (g) => {
-        // If one player remains, they get the highest card and pay their bid
-        const activePlayers = getActivePlayers(g)
-        if (activePlayers.length === 1 && g.round.cards.length > 0) {
-            const winner = activePlayers[0]
-            const highestCard = g.round.cards.reduce((high, card) =>
-                card.value > high.value ? card : high, g.round.cards[0])
+        if (g.phase === 'bidding') {
+            // If one player remains in bidding, they get the highest card and pay their bid
+            const activePlayers = getActivePlayers(g)
+            if (activePlayers.length === 1 && g.round.cards.length > 0) {
+                const winner = activePlayers[0]
+                const highestCard = g.round.cards.reduce((high, card) =>
+                    card.value > high.value ? card : high, g.round.cards[0])
 
-            if (g.phase === 'bidding') {
                 winner.propertyCards.push(highestCard)
                 winner.coins -= winner.bid
-            } else {
-                winner.moneyCards.push(highestCard)
-                // In auction phase, winner pays coins equal to bid
-            }
 
-            g.round.cards = []
-            winner.bid = 0
-            winner.active = false
+                g.round.cards = []
+                winner.bid = 0
+                winner.active = false
+            }
+        } else if (g.phase === 'auctioning') {
+            // Resolve auction: match properties to money cards
+            resolveAuctionRound(g)
         }
     }
 
@@ -260,7 +312,8 @@ export default function makeGame () {
             startRound,
             pass,
             bid,
-            selectAuctionCard,
+            selectPropertyToAuction,
+            resolveAuctionRound,
             getCurrentPlayer,
             getActivePlayers,
             nextTurn,

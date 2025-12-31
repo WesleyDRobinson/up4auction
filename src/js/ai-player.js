@@ -128,15 +128,51 @@ export const getAIStrategy = (difficulty = 'balanced') => {
 };
 
 /**
- * Execute AI turn
+ * AI selects which property to auction
+ */
+const selectPropertyForAuction = (game, player, difficulty) => {
+  const { propertyCards } = player;
+
+  if (!propertyCards || propertyCards.length === 0) {
+    return null;
+  }
+
+  // Different strategies for selecting properties
+  if (difficulty === 'easy') {
+    // Easy AI: randomly picks a property
+    const randomIndex = Math.floor(Math.random() * propertyCards.length);
+    return propertyCards[randomIndex];
+  } else if (difficulty === 'hard') {
+    // Hard AI: sells lowest value properties first to keep good ones
+    const sortedProps = propertyCards.slice().sort((a, b) => a.value - b.value);
+    return sortedProps[0];
+  } else {
+    // Medium AI: balanced approach - sells middle-value properties
+    const sortedProps = propertyCards.slice().sort((a, b) => a.value - b.value);
+    const middleIndex = Math.floor(sortedProps.length / 2);
+    return sortedProps[middleIndex];
+  }
+};
+
+/**
+ * Execute AI turn (works for both bidding and auction phases)
  */
 export const executeAITurn = (game, player, strategy = 'balanced') => {
-  const aiStrategy = getAIStrategy(strategy);
-  const decision = aiStrategy(game, player);
-
-  console.log(`AI ${player.name} (${strategy}) decided to:`, decision);
-
-  return decision;
+  if (game.phase === 'auctioning') {
+    // In auction phase, select a property to sell
+    const selectedProperty = selectPropertyForAuction(game, player, strategy);
+    if (selectedProperty) {
+      console.log(`AI ${player.name} (${strategy}) selling property:`, selectedProperty.value);
+      return { action: 'auction', card: selectedProperty };
+    }
+    return { action: 'skip' };
+  } else {
+    // In bidding phase, use normal strategy
+    const aiStrategy = getAIStrategy(strategy);
+    const decision = aiStrategy(game, player);
+    console.log(`AI ${player.name} (${strategy}) decided to:`, decision);
+    return decision;
+  }
 };
 
 /**

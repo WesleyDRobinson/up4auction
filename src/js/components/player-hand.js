@@ -55,7 +55,12 @@ class PlayerHand extends HyperHTMLElement {
         <!-- Property Cards -->
         ${propertyCards.length > 0 ? this.html`
           <div class="mb3">
-            <div class="f6 fw6 mb2 gray">Properties (${propertyCards.length})</div>
+            <div class="f6 fw6 mb2 gray">
+              Properties (${propertyCards.length})
+              ${canSelectCard && phase === 'auctioning' ? this.html`
+                <span class="ml2 f7 bg-gold br-pill ph2 pv1">👆 Click to auction</span>
+              ` : ''}
+            </div>
             <div class="flex flex-wrap">
               ${propertyCards.map(card => {
                 const cardEl = document.createElement('game-card');

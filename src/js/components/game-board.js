@@ -79,9 +79,12 @@ class GameBoard extends HyperHTMLElement {
     if (decision.action === 'bid') {
       this.setState({ message: `${player.name} bids ${decision.amount}` });
       this.actions.bid(this.game, player, decision.amount);
-    } else {
+    } else if (decision.action === 'pass') {
       this.setState({ message: `${player.name} passes` });
       this.actions.pass(this.game, player);
+    } else if (decision.action === 'auction' && decision.card) {
+      this.setState({ message: `${player.name} auctions property ${decision.card.value}` });
+      this.actions.selectPropertyToAuction(this.game, player, decision.card.id);
     }
 
     this.checkRoundComplete();
@@ -156,9 +159,20 @@ class GameBoard extends HyperHTMLElement {
     }
 
     // In auction phase, selecting a property to sell
-    this.actions.selectAuctionCard(this.game, player, card.id);
-    this.setState({ message: `${player.name} is selling property ${card.value}` });
+    const result = this.actions.selectPropertyToAuction(this.game, player, card.id);
+
+    if (result) {
+      this.setState({ message: result });
+    } else {
+      this.setState({ message: `${player.name} auctions property ${card.value}` });
+      this.checkRoundComplete();
+      this.saveGame();
+    }
+
     this.render();
+
+    // Check if next player is AI
+    setTimeout(() => this.checkAndExecuteAITurn(), 500);
   }
 
   checkRoundComplete() {

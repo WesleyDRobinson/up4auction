@@ -76,20 +76,30 @@ class CurrentRound extends HyperHTMLElement {
     const { players, phase } = this.state;
 
     return players.map(player => {
-      const { name, bid, passed, coins } = player;
+      const { name, bid, passed, coins, active } = player;
 
       let statusText = '';
       let statusColor = 'bg-light-gray gray';
 
-      if (passed) {
-        statusText = 'PASSED';
-        statusColor = 'bg-light-red red';
-      } else if (bid > 0) {
-        statusText = `Bid: ${bid}`;
-        statusColor = 'bg-light-yellow gold';
-      } else {
-        statusText = 'Thinking...';
-        statusColor = 'bg-light-gray gray';
+      if (phase === 'bidding') {
+        if (passed) {
+          statusText = 'PASSED';
+          statusColor = 'bg-light-red red';
+        } else if (bid > 0) {
+          statusText = `Bid: ${bid}`;
+          statusColor = 'bg-light-yellow gold';
+        } else {
+          statusText = 'Thinking...';
+          statusColor = 'bg-light-gray gray';
+        }
+      } else if (phase === 'auctioning') {
+        if (!active) {
+          statusText = 'Selected ✓';
+          statusColor = 'bg-light-green green';
+        } else {
+          statusText = 'Selecting...';
+          statusColor = 'bg-light-gray gray';
+        }
       }
 
       return this.html`
