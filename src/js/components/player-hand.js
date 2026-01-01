@@ -14,16 +14,57 @@ class PlayerHand extends HyperHTMLElement {
     };
   }
 
-  handleCardSelection(e) {
+  handleCardSelection(card) {
     if (this.state.canSelectCard) {
       this.dispatchEvent(new CustomEvent('property-selected', {
         detail: {
           player: this.state.player,
-          card: e.detail.card
+          card: card
         },
         bubbles: true
       }));
     }
+  }
+
+  renderCard(card, type, size, clickable) {
+    const sizeClasses = {
+      small: 'w3 h4',
+      normal: 'w4 h5',
+      large: 'w5 h6'
+    };
+
+    let bgColor, textColor, borderColor;
+    if (type === 'property') {
+      if (card.value <= 10) {
+        bgColor = 'bg-light-red';
+        borderColor = 'b--red';
+      } else if (card.value <= 20) {
+        bgColor = 'bg-gold';
+        borderColor = 'b--yellow';
+      } else {
+        bgColor = 'bg-light-green';
+        borderColor = 'b--green';
+      }
+      textColor = 'dark-gray';
+    } else {
+      bgColor = 'bg-dark-green';
+      textColor = 'white';
+      borderColor = 'b--green';
+    }
+
+    const cardSizeClass = sizeClasses[size] || sizeClasses.normal;
+    const clickableClass = clickable ? 'pointer hover-shadow-2 grow' : '';
+    const displayValue = type === 'money' ? (card.value === 0 ? '$0' : `$${card.value}k`) : card.value;
+
+    return this.html`
+      <div
+        class="${cardSizeClass} ${bgColor} ${textColor} br3 ba bw1 ${borderColor} ${clickableClass} flex flex-column items-center justify-center pa2 ma1"
+        onclick=${clickable ? () => this.handleCardSelection(card) : null}
+      >
+        <div class="f6 fw3 o-60 mb1">${type === 'property' ? 'Property' : '💰'}</div>
+        <div class="${type === 'property' ? 'f2' : 'f3'} fw7">${displayValue}</div>
+      </div>
+    `;
   }
 
   render() {
@@ -62,20 +103,7 @@ class PlayerHand extends HyperHTMLElement {
               ` : ''}
             </div>
             <div class="flex flex-wrap">
-              ${propertyCards.map(card => {
-                const cardEl = document.createElement('game-card');
-                cardEl.state = {
-                  card,
-                  type: 'property',
-                  size: 'small',
-                  clickable: canSelectCard && phase === 'auctioning',
-                  selected: false
-                };
-                if (canSelectCard && phase === 'auctioning') {
-                  cardEl.addEventListener('card-selected', this.handleCardSelection.bind(this));
-                }
-                return cardEl;
-              })}
+              ${propertyCards.map(card => this.renderCard(card, 'property', 'small', canSelectCard && phase === 'auctioning'))}
             </div>
           </div>
         ` : ''}
@@ -85,17 +113,7 @@ class PlayerHand extends HyperHTMLElement {
           <div>
             <div class="f6 fw6 mb2 gray">Money Earned (${moneyCards.length})</div>
             <div class="flex flex-wrap">
-              ${moneyCards.map(card => {
-                const cardEl = document.createElement('game-card');
-                cardEl.state = {
-                  card,
-                  type: 'money',
-                  size: 'small',
-                  clickable: false,
-                  selected: false
-                };
-                return cardEl;
-              })}
+              ${moneyCards.map(card => this.renderCard(card, 'money', 'small', false))}
             </div>
           </div>
         ` : ''}

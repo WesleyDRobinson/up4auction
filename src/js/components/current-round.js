@@ -45,19 +45,7 @@ class CurrentRound extends HyperHTMLElement {
             ${phase === 'bidding' ? 'Properties Available' : 'Money Cards Available'}
           </div>
           <div class="flex justify-center flex-wrap animate__animated animate__fadeInUp">
-            ${cards.map((card, index) => {
-              const cardEl = document.createElement('game-card');
-              cardEl.state = {
-                card,
-                type: cardType,
-                size: 'large',
-                clickable: false,
-                selected: false
-              };
-              cardEl.style.animationDelay = `${index * 0.1}s`;
-              cardEl.classList.add('animate__animated', 'animate__bounceIn');
-              return cardEl;
-            })}
+            ${cards.map((card, index) => this.renderCard(card, cardType, 'large', index))}
           </div>
         </div>
 
@@ -68,6 +56,46 @@ class CurrentRound extends HyperHTMLElement {
             ${this.renderPlayerStatuses()}
           </div>
         </div>
+      </div>
+    `;
+  }
+
+  renderCard(card, type, size, index) {
+    const sizeClasses = {
+      small: 'w3 h4',
+      normal: 'w4 h5',
+      large: 'w5 h6'
+    };
+
+    let bgColor, textColor, borderColor;
+    if (type === 'property') {
+      if (card.value <= 10) {
+        bgColor = 'bg-light-red';
+        borderColor = 'b--red';
+      } else if (card.value <= 20) {
+        bgColor = 'bg-gold';
+        borderColor = 'b--yellow';
+      } else {
+        bgColor = 'bg-light-green';
+        borderColor = 'b--green';
+      }
+      textColor = 'dark-gray';
+    } else {
+      bgColor = 'bg-dark-green';
+      textColor = 'white';
+      borderColor = 'b--green';
+    }
+
+    const cardSizeClass = sizeClasses[size] || sizeClasses.normal;
+    const displayValue = type === 'money' ? (card.value === 0 ? '$0' : `$${card.value}k`) : card.value;
+
+    return this.html`
+      <div
+        class="${cardSizeClass} ${bgColor} ${textColor} br3 ba bw1 ${borderColor} flex flex-column items-center justify-center pa2 ma1 animate__animated animate__bounceIn"
+        style=${'animation-delay: ' + (index * 0.1) + 's'}
+      >
+        <div class="f6 fw3 o-60 mb1">${type === 'property' ? 'Property' : '💰'}</div>
+        <div class="${type === 'property' ? 'f2' : 'f3'} fw7">${displayValue}</div>
       </div>
     `;
   }

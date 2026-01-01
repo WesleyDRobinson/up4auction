@@ -5,6 +5,8 @@ import './current-round';
 import './player-hand';
 import './bidding-interface';
 
+const {wire} = HyperHTMLElement;
+
 class GameBoard extends HyperHTMLElement {
   static get observedAttributes() {
     return ['playerNames'];
@@ -280,13 +282,14 @@ class GameBoard extends HyperHTMLElement {
 
   renderCurrentRound() {
     const { game } = this.state;
-    const roundEl = document.createElement('current-round');
-    roundEl.state = {
+    const roundWire = wire(this, ':round');
+    const elem = roundWire`<current-round />`;
+    elem.state = {
       round: game.round,
       players: game.players,
       phase: game.phase
     };
-    return roundEl;
+    return elem;
   }
 
   renderBiddingInterface() {
@@ -294,8 +297,9 @@ class GameBoard extends HyperHTMLElement {
     const currentPlayer = this.actions.getCurrentPlayer(game);
     const isMyTurn = currentPlayer && currentPlayer.id === currentPlayerId;
 
-    const interfaceEl = document.createElement('bidding-interface');
-    interfaceEl.state = {
+    const interfaceWire = wire(this, ':interface');
+    const elem = interfaceWire`<bidding-interface onplace-bid=${this.handleBid.bind(this)} onpass-turn=${this.handlePass.bind(this)} />`;
+    elem.state = {
       player: currentPlayer,
       maxCoins: currentPlayer.coins,
       currentBid: currentPlayer.bid,
@@ -304,11 +308,7 @@ class GameBoard extends HyperHTMLElement {
       phase: game.phase
     };
 
-    // Add event listeners
-    interfaceEl.addEventListener('place-bid', this.handleBid.bind(this));
-    interfaceEl.addEventListener('pass-turn', this.handlePass.bind(this));
-
-    return interfaceEl;
+    return elem;
   }
 
   renderPlayerHand(player) {
@@ -317,19 +317,16 @@ class GameBoard extends HyperHTMLElement {
     const isCurrentPlayer = currentPlayer && currentPlayer.id === player.id;
     const canSelectCard = player.id === currentPlayerId && game.phase === 'auctioning' && isCurrentPlayer;
 
-    const handEl = document.createElement('player-hand');
-    handEl.state = {
+    const handWire = wire(player, ':hand');
+    const elem = handWire`<player-hand ${canSelectCard ? `onproperty-selected=${this.handlePropertySelected.bind(this)}` : ''} />`;
+    elem.state = {
       player,
       isCurrentPlayer,
       phase: game.phase,
       canSelectCard
     };
 
-    if (canSelectCard) {
-      handEl.addEventListener('property-selected', this.handlePropertySelected.bind(this));
-    }
-
-    return handEl;
+    return elem;
   }
 
   renderGameComplete() {
