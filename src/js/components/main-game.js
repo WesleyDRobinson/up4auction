@@ -39,11 +39,9 @@ class MainGame extends HyperHTMLElement {
         const { gameStarted, playerNames } = this.state;
 
         if (!gameStarted) {
-            const setupEl = document.createElement('player-setup');
-            setupEl.addEventListener('start-game', this.handleStartGame.bind(this));
             return this.html`
-                <div class="main-game">
-                    ${setupEl}
+                <div class="main-game" onstart-game=${this.handleStartGame.bind(this)}>
+                    <player-setup></player-setup>
                 </div>
             `;
         }
