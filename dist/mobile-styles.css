@@ -1,0 +1,225 @@
+/* Mobile-specific optimizations for For Sale game */
+
+/* Ensure touch targets are at least 44x44px */
+button,
+.pointer {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Improve readability on small screens */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile */
+  .pa4 {
+    padding: 1rem !important;
+  }
+
+  .pa3 {
+    padding: 0.75rem !important;
+  }
+
+  /* Make cards stack better on mobile */
+  .flex-wrap {
+    justify-content: center;
+  }
+
+  /* Make text more readable */
+  .f2 {
+    font-size: 1.5rem !important;
+  }
+
+  .f3 {
+    font-size: 1.25rem !important;
+  }
+
+  .f4 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Make player hands stack vertically on mobile */
+  .player-hand {
+    margin-bottom: 1rem;
+  }
+
+  /* Make bidding interface more touch-friendly */
+  .bidding-interface input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.75rem !important;
+  }
+
+  .bidding-interface button {
+    padding: 0.75rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Quick bid buttons should wrap better */
+  .bidding-interface .flex.flex-wrap button {
+    flex: 0 0 auto;
+    margin: 0.25rem;
+  }
+
+  /* Game cards should be slightly smaller on mobile */
+  game-card {
+    transform: scale(0.9);
+  }
+
+  /* Current round cards layout */
+  .current-round .flex {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  /* Player status cards */
+  .player-status {
+    min-width: 120px !important;
+  }
+
+  /* Make game header more compact */
+  .game-header {
+    padding-bottom: 0.5rem !important;
+  }
+
+  .game-header .f3 {
+    font-size: 1.25rem !important;
+  }
+
+  /* Player setup on mobile */
+  .player-setup {
+    padding: 1rem !important;
+  }
+
+  .player-setup .mw6 {
+    max-width: 100% !important;
+  }
+
+  /* Start game button more prominent */
+  .player-setup button[onclick*="startGame"] {
+    font-size: 1.25rem !important;
+    padding: 1rem !important;
+  }
+}
+
+/* Landscape orientation on phones */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* Use horizontal layout for cards */
+  .current-round .flex {
+    flex-direction: row;
+  }
+
+  /* Reduce vertical spacing */
+  .mb4 {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .mb3 {
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* Very small screens (phones in portrait) */
+@media (max-width: 480px) {
+  /* Even more compact */
+  .pa4 {
+    padding: 0.5rem !important;
+  }
+
+  .pa3 {
+    padding: 0.5rem !important;
+  }
+
+  /* Smaller cards */
+  game-card {
+    transform: scale(0.8);
+  }
+
+  /* Stack everything vertically */
+  .flex {
+    flex-direction: column;
+  }
+
+  .flex.justify-between {
+    flex-direction: row;
+  }
+
+  /* Hide some less critical info */
+  .game-header .f6 {
+    font-size: 0.7rem !important;
+  }
+}
+
+/* Tablet optimization */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Use two-column layout for player hands */
+  .player-hands {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  /* Center the current round display */
+  .current-round {
+    max-width: 90%;
+    margin: 0 auto 2rem;
+  }
+}
+
+/* Prevent text selection on game elements (better touch UX) */
+.game-board,
+.player-hand,
+.current-round,
+game-card {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* But allow selection in input fields */
+input,
+textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Improve button feedback on touch */
+button:active,
+.pointer:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+/* Better scrolling on mobile */
+body {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbars but keep functionality */
+.player-hands {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.player-hands::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Loading states - better UX on slower connections */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Safe area insets for notched devices */
+@supports(padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}

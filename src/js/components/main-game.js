@@ -1,79 +1,72 @@
-import up4auction from '../game.js'
-
-const {wire} = HyperHTMLElement
+import './game-board';
+import './player-setup';
 
 class MainGame extends HyperHTMLElement {
     static get observedAttributes() {
-        return ['gameId', 'game', 'loaded']
+        return ['gameId']
     }
 
     get defaultState() {
         return {
-            game: this.game,
             gameId: this.gameId,
-            actions: up4auction().actions
+            loadedFromFirestore: false,
+            gameStarted: false,
+            playerNames: null
         }
     }
 
     created() {
-        if (!this.state.game && this.gameId) this._loadGame(this.gameId)
+        this.render();
+        // Optional: Load game from Firestore if gameId exists
+        // For now, we'll just create a new game locally
+        // if (!this.state.loadedFromFirestore && this.gameId) this._loadGame(this.gameId)
     }
 
     attributeChangedCallback() {
         this.render()
     }
 
+    handleStartGame(e) {
+        const { playerNames } = e.detail;
+        this.setState({
+            gameStarted: true,
+            playerNames
+        });
+        this.render();
+    }
+
     render() {
-        let players = this.state.game.players
-        this.html`
-            <div id="side-panel" class="fl flex flex-column pa2 w-third">
-                <h1 class="ma0 animated slideInDown">Game Id: ${this.gameId}</h1>
+        const { gameStarted, playerNames } = this.state;
 
-                <button class=${this.loaded ? 'dn' : ''} onclick=${this}>Load Game</button>
-                
-                <div id="players" class="flex flex-column">
-                
-                    ${players.map(player => wire(player)`<div class="ma1 pa2 w4 h4 bg-light-blue ba b--gold">${player.name}, ${player.propertyCards.join(', ')}</div>`)}
-                    
+        if (!gameStarted) {
+            return this.html`
+                <div class="main-game" onstart-game=${this.handleStartGame.bind(this)}>
+                    <player-setup></player-setup>
                 </div>
-                
-                <div class=${5 === players.length ? 'dn' : 'flex'}>
-                    <input id="player-name" type="text" placeholder="player name">
-                    <input type="submit" value="Add Player" data-call=addPlayer onclick=${this}>
-                </div>
-            </div>
-            <pre class="fr">${JSON.stringify(this.state.game.players, null, 4)}</pre>
-`
-    }
-
-    addPlayer() {
-        let p = this.state.game.players
-        let input = this.querySelector('#player-name')
-        let name = input.value || `Player ${p.length + 1}`
-        input.value = ''
-        let newPlayer = up4auction().actions.createPlayer(p.length + 1, name)
-        p.push(newPlayer)
-        this.render()
-    }
-
-    onclick() {
-        if (!this.loaded) {
-            this._loadGame(this.gameId)
+            `;
         }
+
+        return this.html`
+            <div class="main-game pa3">
+                <game-board playerNames=${JSON.stringify(playerNames)}></game-board>
+            </div>
+        `;
     }
 
     _loadGame(id) {
+        // Future: Load game state from Firestore
         firebase
             .firestore()
             .collection('games')
             .where('id', '==', id)
             .get()
             .then((documents) => {
-                this.setState({game: documents.docs[0].data()})
-
-                console.log('loaded game into state', this.state.game)
-
-                this.loaded = 1
+                if (documents.docs.length > 0) {
+                    const gameData = documents.docs[0].data();
+                    console.log('loaded game from Firestore', gameData);
+                    this.setState({ loadedFromFirestore: true });
+                    // TODO: Pass loaded game to GameBoard component
+                }
             })
             .catch((err) => console.error('could not load game :( ', err))
     }
